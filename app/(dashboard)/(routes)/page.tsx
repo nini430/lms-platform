@@ -1,6 +1,8 @@
+import { UserButton } from "@clerk/nextjs";
+
 const DashboardPage = () => {
     return ( 
-        <p>This is protected route</p>
+        <UserButton afterSignOutUrl="/"/>
      );
 }
  
