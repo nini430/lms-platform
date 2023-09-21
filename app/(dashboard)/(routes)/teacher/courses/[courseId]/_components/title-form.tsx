@@ -56,7 +56,7 @@ const TitleForm = ({ initialData, courseId }: TitleFormProps) => {
           onClick={() => setisEditing((current) => !current)}
           variant="ghost"
         >
-          {isEditing ? <>Cancel</> : <Pencil className="w-4 h-4 mr-2" />}
+          {isEditing ? <>Cancel</> : <><Pencil className="w-4 h-4 mr-2" /> Edit Title</>}
         </Button>
       </div>
       {!isEditing && <p className="text-sm mt-4">{initialData?.title}</p>}
