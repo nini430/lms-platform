@@ -4,7 +4,7 @@ import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Chapter, Course } from '@prisma/client';
-import { Pencil, PlusCircle } from 'lucide-react';
+import { Loader2, Pencil, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
@@ -12,6 +12,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import ChaptersList from './chapters-list';
 
 interface ChapterFormProps {
   initialData: Course & {
@@ -47,8 +48,29 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
       toast.error('Something went wrong');
     }
   };
+
+  const onReorder=async(updatedData:{id:string,position:number}[])=>{
+      try{
+        setIsUpdating(true);
+      await axios.put(`/api/courses/${courseId}/chapters/reorder`,{list:updatedData});
+      toast.success('Reorder Success');
+      router.refresh();
+      }catch(err) {
+        toast.error('Something went wrong');
+      }finally{
+        setIsUpdating(false);
+      }
+  }
+  const onEdit=(id:string)=>{
+    router.push(`/teacher/courses/${courseId}/chapters/${id}`);
+  }
   return (
-    <div className="border p-4 rounded-md bg-slate-100 mt-6">
+    <div className="relative border p-4 rounded-md bg-slate-100 mt-6">
+      {isUpdating && (
+        <div className='absolute w-full h-full flex items-center justify-center top-0 right-0 rounded-md bg-slate-500/20'>
+            <Loader2 className='animate-spin w-6 h-6' />
+          </div>
+      )}
       <div className="flex justify-between items-center">
         Course Chapters
         <Button onClick={() => setIsCreating((prev) => !prev)} variant="ghost">
@@ -64,6 +86,14 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
       </div>
       {!isCreating && initialData.chapters.length === 0 && (
         <div className="text-sm text-slate-500 italic">No Chapters</div>
+      )}
+
+      {!isCreating && initialData.chapters.length > 0 && (
+        <ChaptersList
+          onReorder={onReorder}
+          onEdit={onEdit}
+          items={initialData?.chapters || []}
+        />
       )}
 
       {isCreating && (
