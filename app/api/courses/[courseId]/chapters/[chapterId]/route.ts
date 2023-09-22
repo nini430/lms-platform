@@ -1,7 +1,9 @@
+import Mux from '@mux/mux-node'
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 
+const {Video}=new Mux(process.env.MUX_TOKEN_ID!,process.env.MUX_TOKEN_SECRET!);
 
 export async function PATCH(req:Request,{params}:{params:{courseId:string,chapterId:string}}) {
     try{
@@ -11,6 +13,33 @@ export async function PATCH(req:Request,{params}:{params:{courseId:string,chapte
 
     if(!userId) {
         return new NextResponse('unauthorized',{status:401});
+    }
+
+    if(values.videoUrl) {
+        const existingMux=await db.muxData.findFirst({
+            where:{
+                chapterId:params.chapterId
+            }
+        });
+
+        if(existingMux) {
+            await Video.Assets.del(existingMux.assetId);
+            await db.muxData.delete({where:{id:existingMux.id}})
+        }
+
+        const asset=await Video.Assets.create({
+            input:values.videoUrl,
+            playback_policy:'public',
+            test:false
+        })
+
+        await db.muxData.create({
+            data:{
+                chapterId:params.chapterId,
+                assetId:asset.id,
+                playbackId:asset.playback_ids?.[0].id
+            }
+        })
     }
 
     const courseOwner=await db.course.findUnique({
@@ -23,7 +52,8 @@ export async function PATCH(req:Request,{params}:{params:{courseId:string,chapte
     if(!courseOwner) {
         return new NextResponse('action not allowed',{status:403});
     }
-    //TODO: handle video upload
+    
+
 
     const chapter=await db.chapter.update({
         where:{
