@@ -2,6 +2,7 @@
 
 import AlertDialogModal from '@/components/modals/alert-dialog';
 import { Button } from '@/components/ui/button';
+import useConfettiStore from '@/hooks/use-confetti-store';
 import axios from 'axios';
 import { Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -19,6 +20,7 @@ const CourseActions = ({
   isPublished,
   courseId,
 }: CourseActionsProps) => {
+  const confetti=useConfettiStore();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,6 +48,8 @@ const CourseActions = ({
       } else {
         await axios.patch(`/api/courses/${courseId}/publish`);
         toast.success('Course published!')
+        confetti.onOpen();
+
       }
 
       router.refresh();
